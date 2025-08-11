@@ -39,7 +39,9 @@ apk add --update --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/ed
 # clean cloudflared config
 mkdir -p /etc/cloudflared \
     && rm -f /etc/cloudflared/config.yml
-    
+# ensure cloudflared is updated
+/usr/local/bin/cloudflared update \
+    && echo "$(date "+%d.%m.%Y %T") cloudflared updated for ${ARCH}" >> /build_date.info    
 # add unbound version to build.info
 echo "$(date "+%d.%m.%Y %T") Unbound $(/usr/local/sbin/unbound -V | head -1) installed for ${ARCH}" >> /build_date.info    
 
