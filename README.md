@@ -1,6 +1,6 @@
 <h1 align="center" id="heading"> pihole-dot-doh </h1>
 
-<a href="https://github.com/devzwf/pihole-dot-doh/blob/main/CHANGELOG.MD"><img src="https://img.shields.io/badge/🔶-Changelog-blue" /></a> <a href="https://ko-fi.com/O5O0FG195"><img src="https://img.shields.io/badge/%E2%98%95-Buy%20me%20a%20coffee-red" /></a>
+<a href="https://github.com/l3anks/pihole-dot-doh/blob/main/CHANGELOG.MD"><img src="https://img.shields.io/badge/🔶-Changelog-blue" /></a> <a href="https://ko-fi.com/O5O0FG195"><img src="https://img.shields.io/badge/%E2%98%95-Buy%20me%20a%20coffee-red" /></a>
 
 Official pihole docker with both DoT (DNS over TLS), DoH (DNS over HTTPS)  and unbound clients. Don't browse the web securely and yet still send your DNS queries in plain text!
 
@@ -31,7 +31,7 @@ Below is an docker compose example.
 services:
   pihole:
     container_name: pihole_v6
-    image: devzwf/pihole-dot-doh:latest-v6
+    image: l3anks/pihole-dot-doh:latest
     ports:
       # DNS Ports
       - "53:53/tcp"
@@ -98,5 +98,5 @@ If no logs are collected you might need to enable "log-queries" in the "unbound.
 
 # Support
 
-[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/devzwf)
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/l3anks)
 
