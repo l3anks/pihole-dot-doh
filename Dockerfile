@@ -10,7 +10,7 @@ ARG UNBOUND_DOWNLOAD_URL=https://nlnetlabs.nl/downloads/unbound/unbound-1.24.1.t
 WORKDIR /tmp/src
 
 RUN build_deps="curl gcc make libc-dev openssl-dev libevent-dev expat-dev nghttp2-dev protobuf-c-dev" && \
-    apk add \
+    apk update && apk add --no-cache \
       $build_deps && \
     curl -sSL $UNBOUND_DOWNLOAD_URL -o unbound.tar.gz && \
     echo "${UNBOUND_SHA256} *unbound.tar.gz" | sha256sum -c - && \
@@ -49,8 +49,7 @@ COPY --from=unbound /usr/local/sbin/unbound* /usr/local/sbin/
 COPY --from=unbound /usr/local/lib/libunbound* /usr/local/lib/
 COPY --from=unbound /usr/local/etc/unbound/* /usr/local/etc/unbound/
 
-RUN apk update && \
-    apk add perl openssl ca-certificates libevent
+RUN apk update && apk add --no-cache perl openssl ca-certificates libevent
 
 #RUN apk update && \
 #  apk add --no-cache bash nano libevent curl wget tzdata shadow perl
