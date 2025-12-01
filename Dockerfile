@@ -4,39 +4,43 @@ ARG TAG='latest'
 # Build unbound in an Alpine environment
 FROM alpine:latest AS unbound
 
-ARG UNBOUND_VERSION=1.24.2
-ARG UNBOUND_SHA256=44e7b53e008a6dcaec03032769a212b46ab5c23c105284aa05a4f3af78e59cdb
-ARG UNBOUND_DOWNLOAD_URL=https://nlnetlabs.nl/downloads/unbound/unbound-1.24.2.tar.gz
+ARG UNBOUND_VERSION=latest
 WORKDIR /tmp/src
 
 RUN build_deps="curl gcc make libc-dev openssl-dev libevent-dev expat-dev nghttp2-dev protobuf-c-dev" && \
-    apk update && apk add --no-cache \
-      $build_deps && \
-    curl -sSL $UNBOUND_DOWNLOAD_URL -o unbound.tar.gz && \
-    echo "${UNBOUND_SHA256} *unbound.tar.gz" | sha256sum -c - && \
-    tar xzf unbound.tar.gz && \
-    rm -f unbound.tar.gz && \
-    cd unbound-${UNBOUND_VERSION} && \
-    addgroup unbound && \
-    adduser -G unbound -h /etc -s /bin/null -D unbound && \
-    ./configure \
-        --disable-dependency-tracking \
-        --with-pthreads \
-        --with-username=unbound \
-        --with-libevent \
-        --with-libnghttp2 \
-        --enable-dnstap \
-        --enable-tfo-server \
-        --enable-tfo-client \
-        --enable-event-api \
-        --enable-subnet \
-        --with-ssl=/usr && \
-    make -j$(nproc) install && \
-    # Copy required Alpine shared libraries
-    mkdir -p /usr/local/lib-copy && \
-    ldd /usr/local/sbin/unbound | grep "=> /" | awk '{print $3}' | sort | uniq | xargs -I{} cp -L {} /usr/local/lib-copy/ && \
-    # Create a tar of the libs for extraction
-    cd /usr/local/lib-copy && tar czf /tmp/unbound-libs.tar.gz *
+  apk update && apk add --no-cache \
+  $build_deps && \
+  if [ "${UNBOUND_VERSION}" = "latest" ]; then \
+  UNBOUND_VERSION=$(curl -sI https://github.com/NLnetLabs/unbound/releases/latest | grep -i "location:" | awk -F'/' '{print $NF}' | tr -d '\r' | sed 's/release-//'); \
+  fi && \
+  UNBOUND_DOWNLOAD_URL="https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz" && \
+  UNBOUND_SHA256_URL="https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz.sha256" && \
+  curl -sSL $UNBOUND_DOWNLOAD_URL -o unbound.tar.gz && \
+  UNBOUND_SHA256=$(curl -sSL $UNBOUND_SHA256_URL) && \
+  echo "${UNBOUND_SHA256} *unbound.tar.gz" | sha256sum -c - && \
+  tar xzf unbound.tar.gz && \
+  rm -f unbound.tar.gz && \
+  cd unbound-${UNBOUND_VERSION} && \
+  addgroup unbound && \
+  adduser -G unbound -h /etc -s /bin/null -D unbound && \
+  ./configure \
+  --disable-dependency-tracking \
+  --with-pthreads \
+  --with-username=unbound \
+  --with-libevent \
+  --with-libnghttp2 \
+  --enable-dnstap \
+  --enable-tfo-server \
+  --enable-tfo-client \
+  --enable-event-api \
+  --enable-subnet \
+  --with-ssl=/usr && \
+  make -j$(nproc) install && \
+  # Copy required Alpine shared libraries
+  mkdir -p /usr/local/lib-copy && \
+  ldd /usr/local/sbin/unbound | grep "=> /" | awk '{print $3}' | sort | uniq | xargs -I{} cp -L {} /usr/local/lib-copy/ && \
+  # Create a tar of the libs for extraction
+  cd /usr/local/lib-copy && tar czf /tmp/unbound-libs.tar.gz *
 
 FROM ${FRM}:${TAG}
 ARG FRM
