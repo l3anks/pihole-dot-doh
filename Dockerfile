@@ -1,6 +1,21 @@
 ARG FRM='pihole/pihole'
 ARG TAG='latest'
 
+# Build cloudflared from source to fix vulnerabilities
+FROM golang:alpine AS cloudflared
+ARG CLOUDFLARED_VERSION=latest
+
+WORKDIR /go/src/github.com/cloudflare/cloudflared
+RUN apk add --no-cache git make build-base && \
+  git clone https://github.com/cloudflare/cloudflared . && \
+  if [ "${CLOUDFLARED_VERSION}" != "latest" ]; then \
+  git checkout "${CLOUDFLARED_VERSION}"; \
+  fi && \
+  go get golang.org/x/crypto@latest && \
+  go mod tidy && \
+  go mod vendor && \
+  go build -v -o cloudflared ./cmd/cloudflared
+
 # Build unbound in an Alpine environment
 FROM alpine:latest AS unbound
 
@@ -8,7 +23,7 @@ ARG UNBOUND_VERSION=latest
 WORKDIR /tmp/src
 
 RUN build_deps="curl gcc make libc-dev openssl-dev libevent-dev expat-dev nghttp2-dev protobuf-c-dev" && \
-  apk update && apk add --no-cache \
+  apk update && apk upgrade --no-cache && apk add --no-cache \
   $build_deps && \
   if [ "${UNBOUND_VERSION}" = "latest" ]; then \
   UNBOUND_VERSION=$(curl -sI https://github.com/NLnetLabs/unbound/releases/latest | grep -i "location:" | awk -F'/' '{print $NF}' | tr -d '\r' | sed 's/release-//'); \
@@ -52,8 +67,10 @@ RUN mkdir -p /usr/local/etc/unbound
 COPY --from=unbound /usr/local/sbin/unbound* /usr/local/sbin/
 COPY --from=unbound /usr/local/lib/libunbound* /usr/local/lib/
 COPY --from=unbound /usr/local/etc/unbound/* /usr/local/etc/unbound/
+COPY --from=cloudflared /go/src/github.com/cloudflare/cloudflared/cloudflared /usr/local/bin/cloudflared
 
-RUN apk update && apk add --no-cache perl openssl ca-certificates libevent
+
+RUN apk update && apk upgrade --no-cache && apk add --no-cache perl openssl ca-certificates libevent
 
 #RUN apk update && \
 #  apk add --no-cache bash nano libevent curl wget tzdata shadow perl
@@ -61,7 +78,8 @@ RUN apk update && apk add --no-cache perl openssl ca-certificates libevent
 ADD scripts /temp
 
 RUN groupadd unbound \
-  && useradd -g unbound unbound 
+  && useradd -g unbound unbound \
+  && apk del unzip 
 RUN /bin/bash /temp/install.sh \
   && rm -rf /temp/install.sh 
 

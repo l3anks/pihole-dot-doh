@@ -2,6 +2,9 @@
 
 All major changes to this project will be documented here.
 
+## 2026-02-24
+    - Update to latest upstream Pi-hole image
+    - Rebuild cloudflared and unbound from source
 ## 2025-04-05
     - Update vedev to 2025.04.0
     - Fix FTLCONF Env 
