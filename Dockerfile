@@ -2,7 +2,7 @@ ARG FRM='pihole/pihole'
 ARG TAG='latest'
 
 # Build cloudflared from source to fix vulnerabilities
-FROM golang:alpine AS cloudflared
+FROM golang:1.26-alpine AS cloudflared
 ARG CLOUDFLARED_VERSION=latest
 
 WORKDIR /go/src/github.com/cloudflare/cloudflared
